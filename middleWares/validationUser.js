@@ -8,12 +8,13 @@ const validateUser = [
         .withMessage('Name is required')
         .isLength({ min: 3, max: 255 })
         .withMessage('Name must be at least 3 characters long'),
-    body('username')
-        .isString()
+    body('phone')
+        .isInt()
         .notEmpty()
-        .withMessage('Username is required')
-        .isLength({ min: 3, max: 255 })
-        .withMessage('Username must be at least 3 characters long'),
+        .withMessage('Phone is required')
+        .isLength({ min: 11, max: 11 })
+        .withMessage("the phone must be 11 digits"),
+
     body('password')
         .isString()
         .notEmpty()

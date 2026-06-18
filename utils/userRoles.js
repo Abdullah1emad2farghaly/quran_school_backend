@@ -1,8 +1,8 @@
 const Roles = {
-    ADMIN: 'admin',
-    USER: 'user',
-    TEACHER: 'teacher',
-    PARENT: 'parent',
+    ADMIN: 'Admin',
+    COLLECTOR: 'Collector',
+    TEACHER: 'Teacher',
+    PARENT: 'Parent',
 };
 
 export default Roles;
