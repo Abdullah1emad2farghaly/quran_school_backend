@@ -116,13 +116,55 @@ const toggleGroupActivation = asyncWrapper( async (req, res, next) => {
     }
 })
 
+
+// create groupSession
+const createGroupSession = asyncWrapper (async (req, res, next) => {
+    const groupId = req.params.id
+    const groupData = req.body;
+
+    try {
+        const sessionData = await groupService.createGroupSession({ groupId, ...groupData });
+
+        console.log(sessionData);
+        const data = {
+            status: httpStatusText.SUCCESS,
+            msg: `sessionData saved successfully`,
+            data: sessionData
+        };
+        
+        res.json({ data })
+    }catch(error){
+        next(error);
+    }
+})
+
+
+const getLastGroupSession = asyncWrapper ( async (req, res, next) => {
+    const groupId = req.params.id;
+    
+    const userId = req.currentUser.id;
+
+    try{
+        const lastSessionData = await groupService.getLastGroupSession(groupId, userId);
+        const data = {
+            status: httpStatusText.SUCCESS,
+            data: lastSessionData
+        };
+        
+        res.json({ data })
+    }catch(error){
+        next(error)
+    }
+})
 const groupController = {
     getAllGroups, 
     getGroupById,
     createGroup,
     updateGroup,
     deleteGroup,
-    toggleGroupActivation
+    toggleGroupActivation,
+    createGroupSession,
+    getLastGroupSession
 };
 
 export default groupController;

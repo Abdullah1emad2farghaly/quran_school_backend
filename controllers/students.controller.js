@@ -6,25 +6,19 @@ import appErrors from "../utils/appErrors.js";
 import { validationResult } from "express-validator";
 
 const getStudents = asyncWrapper(
-    async (req, res) => {
-        const [rows] = await db.query(
-            `SELECT s.id AS id, s.name AS studentName, u.name AS TeacherName, g.name AS groupName, u.phone AS parentPhone 
-            FROM students s 
-
-            LEFT JOIN Groupss g ON s.groupId = g.id
-
-            LEFT JOIN Teachers t ON g.teacherId = t.id
-            LEFT JOIN Users u ON t.userId = u.id
-
-            LEFT JOIN Parents p ON s.parentId = p.id
-            LEFT JOIN Users up ON p.userId = up.id
-            `
-        );
-        const data = {
-            status: httpStatusText.SUCCESS,
-            data: { students: rows }
+    async (req, res, next) => {
+        
+        try{
+            const students = await studentSerivces.getStudents();
+            console.log(students)
+            const data = {
+                status: httpStatusText.SUCCESS,
+                data: { students: students }
+            }
+            res.json({ data });
+        }catch(error){
+            next(error)
         }
-        res.json({ data });
     }
 )
 
@@ -36,9 +30,9 @@ const postStudents = asyncWrapper(
             const error = appErrors.create(errors.array(), 400, httpStatusText.FAIL);
             return next(error);
         }
-        const { name, parentId, groupId } = req.body;
+        // const { name, parentId, groupId } = req.body;
         try {
-            const student = await studentSerivces.createStudent({ name, parentId, groupId });
+            const student = await studentSerivces.createStudent(req.body);
             console.log(student);
             res.status(201).json({
                 status: httpStatusText.SUCCESS,
@@ -59,9 +53,9 @@ const updateStudent = asyncWrapper(
             return next(error);
         }
         const id = req.params.id;
-        const { name, groupId } = req.body;
+        const { name, groupId, gender, birthDate } = req.body;
         try {
-            const student = await studentSerivces.updateStudent(id, { name, groupId });
+            const student = await studentSerivces.updateStudent(id, { name, groupId, gender, birthDate });
             res.json({
                 status: httpStatusText.SUCCESS,
                 data: { student }
@@ -76,11 +70,12 @@ const updateStudent = asyncWrapper(
 const deleteStudent = asyncWrapper(
     async (req, res, next) => {
 
-        const id = req.params;
+        const id = req.params.id;
         try {
-            await studentSerivces.deleteStudent(id);
+            const result = await studentSerivces.deleteStudent(id);
             res.json({
                 status: httpStatusText.SUCCESS,
+                msg: "Student deleted successfully",
                 data: null
             });
         } catch (error) {

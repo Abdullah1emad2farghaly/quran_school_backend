@@ -13,8 +13,8 @@ const createAttendance = asyncWrapper(async (req, res, next) => {
     }
 
     try {
-        const result = await memorizationService.createAttendance(req.body);
-        data = {
+        const result = await attendanceService.createAttendance(req.body);
+        const data = {
             status: httpStatusText.SUCCESS,
             msg: 'Attendance created successfully',
             data: null

@@ -6,19 +6,22 @@ import allowTo from "../middleWares/allowTo.js";
 import Roles from "../utils/userRoles.js";
 const router = Router();
 router.use(verifyToken)
-router.use(allowTo(Roles.ADMIN));
 
 router.route("/")
-    .get(groupController.getAllGroups)
-    .post(validateGroup.validateCreateGroup, groupController.createGroup);
+    .get(allowTo(Roles.ADMIN), groupController.getAllGroups)
+    .post(allowTo(Roles.ADMIN), validateGroup.validateCreateGroup, groupController.createGroup);
 
 router.route("/:id")
-    .delete(groupController.deleteGroup)
-    .put(validateGroup.validateCreateGroup, groupController.updateGroup)
-    .get(groupController.getGroupById)
+    .delete(allowTo(Roles.ADMIN), groupController.deleteGroup)
+    .put(allowTo(Roles.ADMIN), validateGroup.validateCreateGroup, groupController.updateGroup)
+    .get(allowTo(Roles.ADMIN), groupController.getGroupById)
+    .post(allowTo(Roles.TEACHER), groupController.createGroupSession)
+
+router.route("/last-session/:id")
+    .get(allowTo(Roles.TEACHER), groupController.getLastGroupSession)
 
 router.route("/:id/toggle-active")
-    .patch(groupController.toggleGroupActivation)
+    .patch(allowTo(Roles.ADMIN), groupController.toggleGroupActivation)
 
 
 export default router;

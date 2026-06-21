@@ -124,12 +124,33 @@ const getAllAttendance = async () => {
 };
 
 const getAttendanceByStudent = async (studentId) => {
-    const [rows] = await db.query(`
-        SELECT * FROM Attendance
+    const [attendance] = await db.query(
+        `
+        SELECT status, date
+        FROM Attendance
         WHERE studentId = ?
-        ORDER BY date DESC`,
+        AND status = 'Absent'
+        ORDER BY date DESC
+    `,
         [studentId]
     );
+
+    const [absenceStats] = await db.query(
+        `
+        SELECT COUNT(*) AS absentCountLast30Days
+        FROM Attendance
+        WHERE studentId = ?
+            AND status = 'Present'
+            AND date >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+    `,
+        [studentId]
+    );
+
+    console.log(absenceStats[0])
+
+    
+    const rows = {...absenceStats[0], attendance};
+
 
     if (rows.length === 0) {
         throw appErrors.create(`No attendance records found for student with id ${studentId}`, 404, httpStatusText.NOT_FOUND);
@@ -145,7 +166,7 @@ const deleteAttendanceById = async (attendanceId) => {
         WHERE id = ?
     `, [attendanceId]);
 
-    if(result.affectedRows === 0) {
+    if (result.affectedRows === 0) {
         throw appErrors.create(`Attendance with id ${attendanceId} does not exist`, 404, httpStatusText.NOT_FOUND);
     }
     return result;

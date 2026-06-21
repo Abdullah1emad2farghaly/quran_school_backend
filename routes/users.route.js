@@ -3,7 +3,7 @@ import usersController from "../controllers/users.controller.js";
 import validationUser from "../middleWares/validationUser.js";  
 import verifyToken from "../middleWares/verifyToken.js";
 const router = Router();
-// router.use(verifyToken)
+router.use(verifyToken)
 
 router.route("/")
     .get(usersController.getAllUsers)
@@ -11,7 +11,7 @@ router.route("/")
 
 router.route("/:id")
     .get(usersController.getUserById)
-    .put(validationUser, usersController.updateUser)
+    .patch(validationUser, usersController.updateUser)
     .delete(usersController.deleteUser);
 
 

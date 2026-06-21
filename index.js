@@ -10,6 +10,7 @@ import groupScheduleRouter from './routes/groupSchedule.route.js';
 import attendanceRouter from './routes/attendance.route.js';
 import memorizationRouter from './routes/memorization.route.js'
 import teachersRouter from './routes/teachers.route.js'
+import parentRouter from './routes/parents.route.js'
 
 import httpStatusText from './utils/httpStatusText.js';
 
@@ -27,6 +28,7 @@ app.use('/api/group-schedules', groupScheduleRouter);
 app.use('/api/attendance', attendanceRouter);
 app.use('/api/memorization', memorizationRouter);
 app.use('/api/teachers/my-groups', teachersRouter);
+app.use('/api/parents/my-childern', parentRouter)
 
 
 // global error handler
@@ -34,7 +36,7 @@ app.use((err, req, res, next) => {
     res.status(err.status || 500).json({status: err.statusText||httpStatusText.ERROR, msg: err.message});
 });
 
-const PORT  = process.env.PORT || 3000;
+const PORT  = process.env.PORT;
 console.log("before listening")
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);

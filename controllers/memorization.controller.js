@@ -6,14 +6,16 @@ import httpStatusText from "../utils/httpStatusText.js";
 
 const createMemorization = asyncWrapper(
     async (req, res, next) => {
+        const userId = req.currentUser.id;
+
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
             return next(appErrors.create(errors.array(), 400, httpStatusText.FAIL));
         }
 
         try {
-            const result = await memorizationService.createMemorization(req.body);
-            data = {
+            const result = await memorizationService.createMemorization(req.body, userId);
+            const data = {
                 status: httpStatusText.SUCCESS,
                 msg: 'Memorization created successfully',
                 data: null

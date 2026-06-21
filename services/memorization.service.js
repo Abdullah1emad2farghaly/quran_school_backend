@@ -4,8 +4,14 @@ import httpStatusText from "../utils/httpStatusText.js";
 
 
 // create memorization to specific student in specific group schedule
-const createMemorization = async (reqBody) => {
-    let { studentId, teacherId, memorizationScore, revision, tajweedScore, fluencyScore, totalScore, notes, date, groupId } = reqBody;
+const createMemorization = async (reqBody, userId) => {
+    let { studentId, memorizationScore, revision, tajweedScore, fluencyScore, totalScore, notes, date, groupId } = reqBody;
+    
+    let [teacherId] = await db.query(`
+        SELECT t.id FROM Teachers t WHERE t.userId = ?
+    `, [userId]);
+
+    teacherId = teacherId[0].id;
 
     date = new Date().toISOString().split('T')[0];
 
@@ -57,7 +63,6 @@ const createMemorization = async (reqBody) => {
         `,
         [groupId, currentDay, currentTime]
     );
-    console.log(currentTime)
 
     if (schedule.length === 0) {
         throw appErrors.create(`Group with id ${groupId} does not have a schedule at the current time`, 400, httpStatusText.FAIL);
