@@ -6,13 +6,16 @@ import httpStatusText from "../utils/httpStatusText.js";
 const getGroups = async () => {
     const [rows] = await db.query(`
         SELECT
-            g.id AS groupId,
+            g.id AS id,
             g.name AS groupName,
             g.maxStudents,
             g.isActive,
-
+            sm.surahName AS currentSurah,
             g.teacherId,
-            u.name AS teacherName
+            u.name AS teacherName,
+
+            COUNT(DISTINCT sch.id) AS scheduleDaysCount,
+            COUNT(DISTINCT st.id) AS studentsCount
 
         FROM Groupss g
 
@@ -22,7 +25,28 @@ const getGroups = async () => {
         LEFT JOIN Users u
             ON t.userId = u.id
 
-        ORDER BY g.id
+        LEFT JOIN GroupSessions gs
+            ON gs.groupId = g.id
+
+        LEFT JOIN SessionMemorization sm
+            ON sm.sessionId = gs.id
+
+        LEFT JOIN GroupSchedules sch
+            ON sch.groupId = g.id
+
+        LEFT JOIN Students st
+            ON st.groupId = g.id
+
+        GROUP BY
+            g.id,
+            g.name,
+            g.maxStudents,
+            g.isActive,
+            sm.surahName,
+            g.teacherId,
+            u.name
+
+        ORDER BY g.id;
     `);
 
     return rows;
@@ -71,7 +95,7 @@ const createGroup = async (groupData) => {
 
 // Update Group
 const updateGroup = async (groupId, groupData) => {
-    const { name, teacherId, maxStudents, isActive } = groupData;
+    const { name, teacherId, maxStudents } = groupData;
 
     // Check group exists
     const [groups] = await db.query(
@@ -109,15 +133,13 @@ const updateGroup = async (groupId, groupData) => {
         SET
             name = ?,
             teacherId = ?,
-            maxStudents = ?,
-            isActive = ?
+            maxStudents = ?
         WHERE id = ?
         `,
         [
             name,
             teacherId ?? null,
             maxStudents,
-            isActive ? 1 : 0,
             groupId
         ]
     );
@@ -145,6 +167,7 @@ const getGroupById = async (groupId) => {
         SELECT
             g.id AS groupId,
             g.name AS groupName,
+            g.maxStudents AS maxStudents,
             g.isActive,
             t.id AS teacherId,
             u.name AS teacherName,
@@ -170,7 +193,7 @@ const getGroupById = async (groupId) => {
                     )
                 )
                 FROM Students s
-                WHERE s.groupId = g.id
+                WHERE s.groupId = g.id 
             ) AS students
 
         FROM Groupss g

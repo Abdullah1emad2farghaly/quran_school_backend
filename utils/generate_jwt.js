@@ -8,7 +8,7 @@ const generateJWT = (user) => {
         },
         process.env.JWT_SECRET_KEY,
         {
-            expiresIn: "15m"
+            expiresIn: "1h"
         }
     );
 

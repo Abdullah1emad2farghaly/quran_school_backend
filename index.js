@@ -14,13 +14,19 @@ import parentRouter from './routes/parents.route.js'
 
 import httpStatusText from './utils/httpStatusText.js';
 
-
 dotenv.config();
 const app = express();
 app.use(express.json());
+app.use(cors({
+    origin: 'http://localhost:5173'
+}));
 
 
 app.use('/api/users', usersRouter);
+app.use((req, res, next) => {
+    console.log(`${req.method} ${req.originalUrl}`);
+    next();
+});
 app.use("/api/auth", authRouter);
 app.use('/api/students', studentsRouter)
 app.use('/api/groups', groupsRouter)

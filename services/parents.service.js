@@ -84,9 +84,9 @@ const getMyChildById = async (userId, studentId) => {
         `,
         [studentId]
     );
-    
 
-    
+
+
 
     const [studentDetails] = await db.query(`
         SELECT 
@@ -95,26 +95,26 @@ const getMyChildById = async (userId, studentId) => {
             g.name AS groupName,
 
             JSON_ARRAYAGG(
-                JSON_OBJECT(
-                    'sessionId', gs.id,
-                    'createdAt', gs.createdAt,
-
-                    'memorizationScore', mr.memorizationScore,
-                    'revisionScore', mr.revision,
-
-                    'memorization', JSON_OBJECT(
-                        'surahName', sm.surahName,
-                        'fromAyah', sm.fromAyah,
-                        'toAyah', sm.toAyah
-                    ),
-
-                    'revision', JSON_OBJECT(
-                        'surahName', sr.surahName,
-                        'fromAyah', sr.fromAyah,
-                        'toAyah', sr.toAyah
-                    )
-                )
-            ) AS sessions
+                CASE
+                    WHEN gs.id IS NOT NULL THEN
+                        JSON_OBJECT(
+                            'sessionId', gs.id,
+                            'createdAt', gs.createdAt,
+                            'memorizationScore', mr.memorizationScore,
+                            'revisionScore', mr.revision,
+                            'memorization', JSON_OBJECT(
+                                'surahName', sm.surahName,
+                                'fromAyah', sm.fromAyah,
+                                'toAyah', sm.toAyah
+                            ),
+                            'revision', JSON_OBJECT(
+                                'surahName', sr.surahName,
+                                'fromAyah', sr.fromAyah,
+                                'toAyah', sr.toAyah
+                            )
+                        )
+                END
+        ) AS sessions
 
         FROM Students s
 

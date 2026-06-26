@@ -15,25 +15,25 @@ const getTeacherGroups = async (teacherId) => {
             g.id,
             g.name AS groupName,
             g.isActive,
-            JSON_ARRAYAGG(
-                JSON_OBJECT(
-                    'day', gs.dayOfWeek,
-                    'startTime', TIME_FORMAT(gs.startTime, '%H:%i:%s'),
-                    'endTime', TIME_FORMAT(gs.endTime, '%H:%i:%s')
-                )
+            COALESCE(
+                (
+                    SELECT JSON_ARRAYAGG(
+                        JSON_OBJECT(
+                            'day', gs.dayOfWeek,
+                            'startTime', TIME_FORMAT(gs.startTime, '%H:%i:%s'),
+                            'endTime', TIME_FORMAT(gs.endTime, '%H:%i:%s')
+                        )
+                    )
+                    FROM GroupSchedules gs
+                    WHERE gs.groupId = g.id
+                ),
+                JSON_ARRAY()
             ) AS schedules
         FROM Groupss g
-        LEFT JOIN GroupSchedules gs
-            ON g.id = gs.groupId
         WHERE g.teacherId = ?
-        GROUP BY
-            g.id,
-            g.name,
-            g.isActive
-        ORDER BY g.id DESC
+        ORDER BY g.id DESC;
     `, [teacherId]);
 
-    console.log(groups, teacherId)
     return groups;
 };
 
@@ -45,7 +45,7 @@ const getMyGroupStudents = async (userId, groupId) => {
         where u.id = ?
     `, [userId])
     const teacherId = user[0].id;
-    
+
     const [group] = await db.query(
         `
         SELECT id, name

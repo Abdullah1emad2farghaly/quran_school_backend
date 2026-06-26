@@ -13,7 +13,7 @@ router.route("/")
 
 router.route("/:id")
     .delete(allowTo(Roles.ADMIN), groupController.deleteGroup)
-    .put(allowTo(Roles.ADMIN), validateGroup.validateCreateGroup, groupController.updateGroup)
+    .patch(allowTo(Roles.ADMIN), validateGroup.validateCreateGroup, groupController.updateGroup)
     .get(allowTo(Roles.ADMIN), groupController.getGroupById)
     .post(allowTo(Roles.TEACHER), groupController.createGroupSession)
 

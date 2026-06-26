@@ -9,6 +9,7 @@ const getStudents = async () => {
         SELECT
             s.id,
             s.name AS studentName,
+            s.birthDate AS birthDate,
 
             g.name AS groupName,
 

@@ -6,8 +6,8 @@ import allowTo from "../middleWares/allowTo.js";
 import Roles from "../utils/userRoles.js";
 
 const router = Router();
-router.use(verifyToken)
 
+router.use(verifyToken)
 router.use(allowTo(Roles.ADMIN))
 
 
