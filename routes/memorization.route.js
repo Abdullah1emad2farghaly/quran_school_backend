@@ -11,7 +11,7 @@ const router = Router();
 router.use(verifyToken)
 router.use(allowTo(Roles.TEACHER));
 
-router.route("/")
+router.route("/group/:groupId/student/:studentId")
     .post(memorizationController.createMemorization)
 
 router.route("/assignments/:groupId")

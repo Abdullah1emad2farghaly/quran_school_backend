@@ -219,8 +219,45 @@ const getMyGroupStudents = async (userId, groupId) => {
         );
     }
 
-   
-    
+    // Check if there is an active schedule right now
+    const [[schedule]] = await db.query(
+        `
+        SELECT id
+        FROM GroupSchedules
+        WHERE groupId = ?
+            AND dayOfWeek = DAYNAME(CURDATE())
+            AND CURTIME() BETWEEN startTime AND endTime
+        LIMIT 1
+        `,
+        [groupId]
+    );
+
+    // If there is an active schedule, ensure today's session exists
+    if (schedule) {
+        const [[session]] = await db.query(
+            `
+            SELECT id
+            FROM GroupSessions
+            WHERE groupId = ?
+                AND sessionDate = CURDATE()
+            LIMIT 1
+            `,
+            [groupId]
+        );
+        var sessionId = session ? session.id : null;
+
+        if (!session) {
+            await db.query(
+                `
+                INSERT INTO GroupSessions (
+                    groupId
+                )
+                VALUES (?)
+                `,
+                [groupId]
+            );
+        }
+    }
 
     const [groupRows] = await db.query(
         `
@@ -277,6 +314,7 @@ const getMyGroupStudents = async (userId, groupId) => {
     );
 
     const response = {
+        sessionId: sessionId,
         groupInfo: groupRows[0] || null,
         students
     };

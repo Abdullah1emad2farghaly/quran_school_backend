@@ -4,8 +4,9 @@ import httpStatusText from "../utils/httpStatusText.js";
 
 
 // create memorization to specific student in specific group schedule
-const createMemorization = async (reqBody, userId) => {
-    let { studentId, memorizationScore, revision, notes, date, groupId, sessionId } = reqBody;
+const createMemorization = async (reqBody, userId, groupId, studentId) => {
+    console.log(reqBody)
+    let { memorizationScore, revision, notes, date } = reqBody;
 
     let [teacherId] = await db.query(`
         SELECT t.id FROM Teachers t WHERE t.userId = ?
@@ -18,19 +19,19 @@ const createMemorization = async (reqBody, userId) => {
     //check if the student exists
     const [student] = await db.query("SELECT * FROM students WHERE id = ?", [studentId]);
     if (!student) {
-        throw appErrors.create("Student not found", 404, httpStatusText.NOT_FOUND);
+        throw appErrors.create({ en: "Student not found", ar: "الطالب غير موجود" }, 404, httpStatusText.NOT_FOUND);
     }
 
     // check if the teacher exists
     const [teacher] = await db.query("SELECT * FROM teachers WHERE id = ?", [teacherId]);
     if (!teacher) {
-        throw appErrors.create("Teacher not found", 404, httpStatusText.NOT_FOUND);
+        throw appErrors.create({ en: "Teacher not found", ar: "المعلم غير موجود" }, 404, httpStatusText.NOT_FOUND);
     }
 
     // check if the group exists
     const [group] = await db.query("SELECT * FROM groupss WHERE id = ?", [groupId]);
     if (!group) {
-        throw appErrors.create("Group not found", 404, httpStatusText.NOT_FOUND);
+        throw appErrors.create({ en: "Group not found", ar: "المجموعة غير موجودة" }, 404, httpStatusText.NOT_FOUND);
     }
 
     // check if the student in this group or not
@@ -40,7 +41,7 @@ const createMemorization = async (reqBody, userId) => {
     `, [studentId, groupId]);
 
     if (!res) {
-        throw appErrors.create("This student not found in this group", 404, httpStatusText.NOT_FOUND);
+        throw appErrors.create({ en: "This student not found in this group", ar: "هذا الطالب غير موجود في هذه المجموعة" }, 404, httpStatusText.NOT_FOUND);
     }
 
     // Get current day and time
@@ -65,7 +66,7 @@ const createMemorization = async (reqBody, userId) => {
     );
 
     if (schedule.length === 0) {
-        throw appErrors.create(`Group with id ${groupId} does not have a schedule at the current time`, 400, httpStatusText.FAIL);
+        throw appErrors.create({ en: `Group with id ${groupId} does not have a schedule at the current time`, ar: `المجموعة ذات المعرف ${groupId} لا تحتوي على جدول في الوقت الحالي` }, 400, httpStatusText.FAIL);
     }
 
     // Prevent duplicate memorization
@@ -80,8 +81,28 @@ const createMemorization = async (reqBody, userId) => {
     );
 
     if (existing.length > 0) {
-        throw appErrors.create('memorization already recorded', 400, httpStatusText.FAIL);
+        throw appErrors.create({ en: "Memorization already recorded for this student today", ar: "تم تسجيل الحفظ لهذا الطالب اليوم" }, 400, httpStatusText.FAIL);
     }
+
+    // Get sessionId that the session before the currentDate for the group
+    const [[session]] = await db.query(
+        `
+        SELECT id
+        FROM GroupSessions
+        WHERE groupId = ?
+            AND sessionDate < CURDATE()
+        ORDER BY sessionDate DESC
+        LIMIT 1
+    `,
+        [groupId]
+    );
+
+    if(!session){
+        throw appErrors.create({ en: "No previous session found for this group", ar: "لا توجد جلسة سابقة لهذه المجموعة" }, 404, httpStatusText.NOT_FOUND);
+    }
+    let sessionId = session ? session.id : null;
+
+    console.log(sessionId);
 
     const [newMemorization] = await db.query(
         `INSERT INTO memorizationRecords (studentId, teacherId, memorizationScore, revision, notes, date, groupId, sessionId)
@@ -90,7 +111,7 @@ const createMemorization = async (reqBody, userId) => {
     );
 
     if (!newMemorization) {
-        throw appErrors.create("Failed to create memorization record", 500, httpStatusText.ERROR);
+        throw appErrors.create({ en: "Failed to create memorization record", ar: "فشل في إنشاء سجل الحفظ" }, 500, httpStatusText.ERROR);
     }
 
     return newMemorization;
