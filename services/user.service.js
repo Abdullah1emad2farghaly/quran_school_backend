@@ -39,9 +39,9 @@ const createUser = async ({ name, phone, password, role }) => {
     return result;
 }
 
-const updateUser = async ({ name, phone, role, userId }) => {
+const updateUser = async ({ name, phone, userId }) => {
     
-    const [result] = await db.query("UPDATE users SET name = ?, phone = ?, role = ? WHERE id = ?", [name, phone, role, userId]);
+    const [result] = await db.query("UPDATE users SET name = ?, phone = ? WHERE id = ?", [name, phone, userId]);
     if(result.affectedRows === 0)
         throw appErrors.create(`User with id ${userId} not found`, 404, httpStatusText.NOT_FOUND);
     return result;

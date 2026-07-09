@@ -6,7 +6,7 @@ const validateCreateGroup = [
         .isLength({ min: 2, max: 100 })
         .withMessage("Group name must be between 2 and 100 characters"),
     body("maxStudents")
-        .isInt({ min: 5, max: 100 })
+        .isInt({ min: 1, max: 100 })
         .withMessage("Invalid max students value"),
 ];
 

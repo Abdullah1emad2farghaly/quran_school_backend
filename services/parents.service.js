@@ -2,6 +2,116 @@ import db from "../config/db.js";
 import appErrors from "../utils/appErrors.js";
 import httpStatusText from "../utils/httpStatusText.js";
 
+
+const getParents = async () => {
+    const [rows] = await db.query(`
+        SELECT
+            p.id,
+            u.id AS userId,
+            u.name,
+            u.phone,
+            u.createdAt,
+            COUNT(s.id) AS totalStudents
+        FROM Parents p
+
+        INNER JOIN Users u
+            ON p.userId = u.id
+
+        LEFT JOIN Students s
+            ON s.parentId = p.id
+
+        GROUP BY
+            p.id,
+            u.name,
+            u.phone,
+            u.createdAt
+        ORDER BY u.name;
+    `);
+
+    return rows;
+};
+
+const getParentById = async (parentId) => {
+    const [[parent]] = await db.query(`
+        SELECT  
+            p.id,
+            u.id AS userId,
+            u.name,
+            u.phone,
+            u.createdAt
+        FROM Parents p
+        INNER JOIN Users u ON p.userId = u.id
+        WHERE p.id = ?
+    `, [parentId]);
+
+    return parent;
+};
+
+export const getParentChildren = async (parentId) => {
+    // Check parent exists
+    const [[parent]] = await db.query(
+        `
+        SELECT id
+        FROM Parents
+        WHERE id = ?
+        `,
+        [parentId]
+    );
+
+    if (!parent) {
+        throw appErrors.create(
+            "Parent not found",
+            404,
+            httpStatusText.NOT_FOUND
+        );
+    }
+
+    const [rows] = await db.query(`
+        SELECT
+            s.id,
+            s.name,
+            s.gender,
+            s.birthDate,
+            s.createdAt,
+
+            g.id AS groupId,
+            g.name AS groupName,
+
+            tu.name AS teacherName,
+
+            sm.surahName AS currentSurah
+
+        FROM Students s
+
+        LEFT JOIN Groupss g
+            ON s.groupId = g.id
+
+        LEFT JOIN Teachers t
+            ON g.teacherId = t.id
+
+        LEFT JOIN Users tu
+            ON t.userId = tu.id
+
+        LEFT JOIN GroupSessions gs
+            ON gs.id = (
+                SELECT gs2.id
+                FROM GroupSessions gs2
+                WHERE gs2.groupId = g.id
+                ORDER BY gs2.sessionDate DESC, gs2.id DESC
+                LIMIT 1
+            )
+
+        LEFT JOIN SessionMemorization sm
+            ON sm.sessionId = gs.id
+
+        WHERE s.parentId = ?
+
+        ORDER BY s.name;
+    `, [parentId]);
+
+    return rows;
+};
+
 const getMyChildren = async (userId) => {
     const [parents] = await db.query(
         `
@@ -149,7 +259,10 @@ const getMyChildById = async (userId, studentId) => {
 
 const parentService = {
     getMyChildren,
-    getMyChildById
+    getMyChildById, 
+    getParents,
+    getParentChildren,
+    getParentById
 }
 
 export default parentService;

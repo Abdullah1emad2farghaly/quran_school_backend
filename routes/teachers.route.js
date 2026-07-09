@@ -6,12 +6,18 @@ import Roles from "../utils/userRoles.js";
 
 const router = Router();
 router.use(verifyToken)
-router.use(allowTo(Roles.TEACHER))
 
 
 router.route("/")
-    .get(teachersController.getMyGroups);
+    .get(allowTo(Roles.ADMIN),teachersController.getAllTeachers)
+
+router.route("/my-groups")
+    .get(allowTo(Roles.TEACHER), teachersController.getMyGroups);
+
 router.route("/:id")
-    .get(teachersController.getMyGroupStudents)
+    .get(allowTo(Roles.ADMIN), teachersController.getTeacherById)
+    
+router.route("/my-groups/:id")
+    .get(allowTo(Roles.TEACHER), teachersController.getMyGroupStudents)
 
 export default router;

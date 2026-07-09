@@ -3,6 +3,7 @@ import memorizationController from "../controllers/memorization.controller.js";
 import verifyToken from "../middleWares/verifyToken.js";
 import allowTo from "../middleWares/allowTo.js";
 import Roles from "../utils/userRoles.js";
+import createMemorizationValidation from "../middleWares/validationMemorization.js";
 
 
 const router = Router();
@@ -12,5 +13,11 @@ router.use(allowTo(Roles.TEACHER));
 
 router.route("/")
     .post(memorizationController.createMemorization)
+
+router.route("/assignments/:groupId")
+    .post(createMemorizationValidation, memorizationController.createMemorizationAssignments)
+
+router.route("/revisions/:groupId")
+    .post(createMemorizationValidation, memorizationController.createRevisionAssignments)
 
 export default router;

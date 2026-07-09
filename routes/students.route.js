@@ -16,12 +16,21 @@ router.route('/')
     .post(validateStudent.validateCreateStudent, studentsController.postStudents)
 
 router.route('/:id')
+    .get(studentsController.getStudentById)
     .delete(studentsController.deleteStudent)
     .patch(validateStudent.validateCreateStudent, studentsController.updateStudent)
 
 router.route('/:id/remove-from-group')
     .patch(studentsController.deleteStudentFromGroup)
 
+router.route("/:id/assign-to-group")
+    .patch(studentsController.assignStudentToGroup)
+
+router.route("/:id/memorization")
+    .get(studentsController.getStudentMemorizationRecords)
+
+router.route("/:id/attendance")
+    .get(studentsController.getStudentAttendance)
 
     
 export default router;

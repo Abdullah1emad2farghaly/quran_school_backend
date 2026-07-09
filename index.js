@@ -23,18 +23,14 @@ app.use(cors({
 
 
 app.use('/api/users', usersRouter);
-app.use((req, res, next) => {
-    console.log(`${req.method} ${req.originalUrl}`);
-    next();
-});
 app.use("/api/auth", authRouter);
 app.use('/api/students', studentsRouter)
 app.use('/api/groups', groupsRouter)
 app.use('/api/group-schedules', groupScheduleRouter);
 app.use('/api/attendance', attendanceRouter);
 app.use('/api/memorization', memorizationRouter);
-app.use('/api/teachers/my-groups', teachersRouter);
-app.use('/api/parents/my-childern', parentRouter)
+app.use('/api/teachers', teachersRouter);
+app.use('/api/parents', parentRouter)
 
 
 // global error handler

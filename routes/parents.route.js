@@ -7,12 +7,19 @@ import Roles from "../utils/userRoles.js";
 const router = Router();
 
 router.use(verifyToken)
-router.use(allowTo(Roles.PARENT));
 
 router.route("/")
-    .get(parentController.getMyChildren);
-
+    .get(allowTo(Roles.ADMIN), parentController.getParents)
+router.route("/:id/children")
+    .get(allowTo(Roles.ADMIN), parentController.getParentChildren)
+    
 router.route("/:id")
-    .get(parentController.getMyChildById);
+    .get(allowTo(Roles.ADMIN), parentController.getParentById)
+
+router.route("/my-children")
+    .get(allowTo(Roles.PARENT), parentController.getMyChildren)
+
+router.route("/my-childern/:id")
+    .get(allowTo(Roles.PARENT), parentController.getMyChildById);
 
 export default router;

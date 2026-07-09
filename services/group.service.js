@@ -6,11 +6,13 @@ import httpStatusText from "../utils/httpStatusText.js";
 const getGroups = async () => {
     const [rows] = await db.query(`
         SELECT
-            g.id AS id,
+            g.id,
             g.name AS groupName,
             g.maxStudents,
             g.isActive,
+
             sm.surahName AS currentSurah,
+
             g.teacherId,
             u.name AS teacherName,
 
@@ -25,8 +27,15 @@ const getGroups = async () => {
         LEFT JOIN Users u
             ON t.userId = u.id
 
+        -- Latest session only
         LEFT JOIN GroupSessions gs
-            ON gs.groupId = g.id
+            ON gs.id = (
+                SELECT gs2.id
+                FROM GroupSessions gs2
+                WHERE gs2.groupId = g.id
+                ORDER BY gs2.sessionDate DESC, gs2.id DESC
+                LIMIT 1
+            )
 
         LEFT JOIN SessionMemorization sm
             ON sm.sessionId = gs.id
@@ -74,14 +83,13 @@ const createGroup = async (groupData) => {
     const [result] = await db.query(
         `
         INSERT INTO Groupss
-        (name, teacherId, maxStudents, isActive)
-        VALUES (?, ?, ?, ?)
+        (name, teacherId, maxStudents)
+        VALUES (?, ?, ?)
         `,
         [
             name,
             teacherId ?? null,
             maxStudents,
-            isActive ? 1 : 0
         ]
     );
 
@@ -163,6 +171,7 @@ const deleteGroup = async (groupId) => {
 
 // get group by id with schedules and teacher info
 const getGroupById = async (groupId) => {
+    
     const [rows] = await db.query(`
         SELECT
             g.id AS groupId,
@@ -206,6 +215,7 @@ const getGroupById = async (groupId) => {
     );
     if (!rows.length)
         throw appErrors.create(`Group with id ${groupId} is not found`, 404, httpStatusText.FAIL)
+    
     return rows[0];
 }
 

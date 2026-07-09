@@ -28,9 +28,60 @@ const createMemorization = asyncWrapper(
     }
 )
 
+const createMemorizationAssignments = asyncWrapper(
+    async (req, res, next) => {
+        const groupId = req.params.groupId;
+        const reqBody = req.body;
+        
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return next(appErrors.create(errors.array(), 400, httpStatusText.FAIL));
+        }
+
+        try {
+            const result = await memorizationService.createMemorizationAssignments(groupId, reqBody);
+            const data = {
+                status: httpStatusText.SUCCESS,
+                msg: {en: 'Memorization assignments created successfully', ar: 'تم إنشاء مهام الحفظ بنجاح'},
+                data: result
+            }
+            res.status(201).json(data);
+        }
+        catch (error) {
+            next(error);
+        }
+    }
+)
+
+const createRevisionAssignments = asyncWrapper(
+    async (req, res, next) => {
+        const groupId = req.params.groupId;
+        const reqBody = req.body;
+        
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return next(appErrors.create(errors.array(), 400, httpStatusText.FAIL));
+        }
+
+        try {
+            const result = await memorizationService.createRevisionAssignments(groupId, reqBody);
+            const data = {
+                status: httpStatusText.SUCCESS,
+                msg: {en: 'Revision assignments created successfully', ar: 'تم إنشاء مهام المراجعة بنجاح'},
+                data: result
+            }
+            res.status(201).json(data);
+        }
+        catch (error) {
+            next(error);
+        }
+    }
+)
 
 const memorizationController = {
-    createMemorization
+    createMemorization,
+    createMemorizationAssignments,
+    createRevisionAssignments
 }
 
 export default memorizationController;

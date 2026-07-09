@@ -8,6 +8,7 @@ import httpStatusText from "../utils/httpStatusText.js";
 const createAttendance = asyncWrapper(async (req, res, next) => {
 
     const errors = validationResult(req);
+    
     if (!errors.isEmpty()) {
         return next(appErrors.create(errors.array(), 400, httpStatusText.FAIL));
     }

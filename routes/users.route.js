@@ -4,6 +4,7 @@ import validationUser from "../middleWares/validationUser.js";
 import verifyToken from "../middleWares/verifyToken.js";
 import allowTo from "../middleWares/allowTo.js";
 import Roles from "../utils/userRoles.js";
+import validateUpdateUser from "../middleWares/validationUpdateUser.js";
 const router = Router();
 router.use(verifyToken)
 router.use(allowTo(Roles.ADMIN));
@@ -14,7 +15,7 @@ router.route("/")
 
 router.route("/:id")
     .get(usersController.getUserById)
-    .patch(validationUser, usersController.updateUser)
+    .patch(validateUpdateUser, usersController.updateUser)
     .delete(usersController.deleteUser);
 
 

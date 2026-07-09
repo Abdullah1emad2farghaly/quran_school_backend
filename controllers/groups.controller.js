@@ -5,6 +5,7 @@ import httpStatusText from '../utils/httpStatusText.js';
 import appErrors from '../utils/appErrors.js';
 
 const getAllGroups = asyncWrapper(async (req, res, next) => {
+    
     try {
         const groups = await groupService.getGroups();
         res.json({

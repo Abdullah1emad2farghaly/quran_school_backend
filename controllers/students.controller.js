@@ -7,13 +7,66 @@ import { validationResult } from "express-validator";
 
 const getStudents = asyncWrapper(
     async (req, res, next) => {
-        
         try{
             const students = await studentSerivces.getStudents();
-            console.log(students)
+            
             const data = {
                 status: httpStatusText.SUCCESS,
                 data: { students: students }
+            }
+            res.json({ data });
+        }catch(error){
+            next(error)
+        }
+    }
+)
+
+// get student
+const getStudentById = asyncWrapper(
+    async (req, res, next) => {
+
+        const id = req.params.id
+        
+        try{
+            const student = await studentSerivces.getStudentById(id);
+            const data = {
+                status: httpStatusText.SUCCESS,
+                data: { student }
+            }
+            res.json({ data });
+        }catch(error){
+            next(error)
+        }
+    }
+)
+
+const getStudentMemorizationRecords = asyncWrapper(
+    async (req, res, next) => {
+
+        const studentId = req.params.id
+        try{
+            const memorization = await studentSerivces.getStudentMemorizationRecords(studentId);
+            const data = {
+                status: httpStatusText.SUCCESS,
+                data: { memorization }
+            }
+            res.json({ data });
+        }catch(error){
+            next(error)
+        }
+    }
+)
+
+const getStudentAttendance = asyncWrapper(
+    async (req, res, next) => {
+
+        const id = req.params.id
+        
+        try{
+            const attendance = await studentSerivces.getStudentAttendance(id);
+            const data = {
+                status: httpStatusText.SUCCESS,
+                data: { attendance }
             }
             res.json({ data });
         }catch(error){
@@ -101,6 +154,24 @@ const deleteStudentFromGroup = asyncWrapper(
     }
 );
 
+const assignStudentToGroup = asyncWrapper(
+    async (req, res, next) => {
+        const studentId = req.params.id;
+        const { groupId } = req.body;
+        try {
+            const student = await studentSerivces.assignStudentToGroup(studentId, groupId);
+            const data = {
+                status: httpStatusText.SUCCESS,
+                msg: "Student assigned to group successfully",
+                data: { student }
+            }
+            res.json({ data });
+        }catch(error){
+            next(error)
+        }
+    }
+)  
+
 
 
 
@@ -109,7 +180,11 @@ const studentsController = {
     postStudents,
     deleteStudent,
     updateStudent,
-    deleteStudentFromGroup
+    deleteStudentFromGroup,
+    getStudentById,
+    getStudentMemorizationRecords,
+    getStudentAttendance,
+    assignStudentToGroup
 }
 
 export default studentsController;

@@ -1,7 +1,6 @@
-import e from "express";
 import { body } from "express-validator";
 
-const validateUser = [
+const validateUpdateUser = [
     body('name')
         .isString()
         .notEmpty()
@@ -12,14 +11,7 @@ const validateUser = [
         .notEmpty()
         .withMessage('Phone is required')
         .isLength({ min: 11, max: 11 })
-        .withMessage("the phone must be 11 digits"),
-    body('password')
-    .isInt({min: 6})
-    .withMessage("Password must be 6 digits at least"),
-    body('role')
-        .isString()
-        .notEmpty()
-        .withMessage('Role is required')
+        .withMessage("the phone must be 11 digits")
 ];
 
-export default validateUser;
+export default validateUpdateUser
