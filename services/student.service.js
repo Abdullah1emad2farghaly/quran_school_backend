@@ -131,7 +131,7 @@ const getStudentMemorizationRecords = async (id) => {
                         WHEN g.id IS NOT NULL AND gs.id IS NOT NULL THEN
                             JSON_OBJECT(
                                 'sessionId', gs.id,
-                                'sessionDate', gs.sessionDate,
+                                'sessionDate', mr.date,
                                 'createdAt', gs.createdAt,
                                 'memorizationScore', mr.memorizationScore,
                                 'revisionScore', mr.revision,
@@ -163,7 +163,7 @@ const getStudentMemorizationRecords = async (id) => {
             ON mr.studentId = s.id
 
         LEFT JOIN GroupSessions gs
-            ON gs.groupId = mr.groupId && gs.sessionDate = mr.date
+            ON gs.id = mr.sessionId
 
         LEFT JOIN SessionMemorization sm
             ON sm.sessionId = gs.id
@@ -261,7 +261,7 @@ const createStudent = async (reqBody) => {
     );
 
     if (parents.length === 0) {
-        throw appErrors.create(`Parent with id ${parentId} is not found`, 404, httpStatusText.NOT_FOUND)
+        throw appErrors.create({en: `Parent with id ${parentId} is not found or not selected`, ar: `الوالد بالمعرف ${parentId} غير موجود أو لم يُحدد`}, 404, httpStatusText.NOT_FOUND)
     }
 
     // Check group exists if provided
@@ -272,7 +272,7 @@ const createStudent = async (reqBody) => {
         );
 
         if (groups.length === 0) {
-            throw appErrors.create(`Group with id ${groupId} is not found`, 404, httpStatusText.NOT_FOUND)
+            throw appErrors.create({en: `Group with id ${groupId} is not found`, ar: `المجموعة بالمعرف ${groupId} غير موجودة`}, 404, httpStatusText.NOT_FOUND)
         }
     }
 
@@ -288,7 +288,7 @@ const createStudent = async (reqBody) => {
     );
 
     if (students.length > 0) {
-        throw appErrors.create(`This student already created for this parent`, 400, httpStatusText.FAIL)
+        throw appErrors.create({en: `This student already exists for this parent`, ar: `هذا الطالب موجود بالفعل لوالد هذا المعرف`}, 400, httpStatusText.FAIL)
     }
 
     // Create student
@@ -320,7 +320,7 @@ const updateStudent = async (studentId, { name, groupId, gender, birthDate }) =>
 
     if (students.length === 0) {
         throw appErrors.create(
-            `Student with id ${studentId} not found`,
+            {en: `Student with id ${studentId} not found`, ar: `الطالب بالمعرف ${studentId} غير موجود`},
             404,
             httpStatusText.FAIL
         );
@@ -337,7 +337,7 @@ const updateStudent = async (studentId, { name, groupId, gender, birthDate }) =>
 
         if (groups.length === 0) {
             throw appErrors.create(
-                'Group not found',
+                {en: `Group with id ${groupId} is not found`, ar: `المجموعة بالمعرف ${groupId} غير موجودة`},
                 404,
                 httpStatusText.FAIL
             );
@@ -358,7 +358,7 @@ const updateStudent = async (studentId, { name, groupId, gender, birthDate }) =>
 
     if (duplicateStudents.length > 0) {
         throw appErrors.create(
-            'This student already exists for this parent',
+            {en: `This student name already exists for this parent`, ar: `اسم هذا الطالب موجود بالفعل لوالد هذا المعرف`},
             400,
             httpStatusText.FAIL
         );

@@ -26,7 +26,7 @@ const createUser = async ({ name, phone, password, role }) => {
             SELECT * FROM users WHERE phone = ?
         `, [phone]);
     if (user[0]) {
-        throw appErrors.create("the number phone already exists", 400, httpStatusText.FAIL)
+        throw appErrors.create({en: "the number phone already exists", ar: "رقم الهاتف موجود بالفعل"}, 400, httpStatusText.FAIL)
     }
 
     const [result] = await db.query("INSERT INTO users (name, phone, password, role) VALUES (?, ?, ?, ?)", [name, phone, password, role]);
@@ -43,7 +43,7 @@ const updateUser = async ({ name, phone, userId }) => {
     
     const [result] = await db.query("UPDATE users SET name = ?, phone = ? WHERE id = ?", [name, phone, userId]);
     if(result.affectedRows === 0)
-        throw appErrors.create(`User with id ${userId} not found`, 404, httpStatusText.NOT_FOUND);
+        throw appErrors.create({en: `User with id ${userId} not found`, ar: `المستخدم بالمعرف ${userId} غير موجود`}, 404, httpStatusText.NOT_FOUND);
     return result;
 }
 
@@ -57,7 +57,7 @@ const getUserById = async (userId) => {
             createdAt  
         FROM users WHERE id = ?`, [userId]);
     if (!rows.length ) {
-        throw appErrors.create(`User with id ${userId} not found`, 404, httpStatusText.NOT_FOUND);
+        throw appErrors.create({en: `User with id ${userId} not found`, ar: `المستخدم بالمعرف ${userId} غير موجود`}, 404, httpStatusText.NOT_FOUND);
     }
     
     return rows;

@@ -73,7 +73,7 @@ const createGroup = async (groupData) => {
 
         if (teachers.length === 0) {
             throw appErrors.create(
-                'Teacher not found',
+                {en: `Teacher with id ${teacherId} not found`, ar: `المعلم بالمعرف ${teacherId} غير موجود`},
                 404,
                 httpStatusText.FAIL
             );
@@ -113,7 +113,7 @@ const updateGroup = async (groupId, groupData) => {
 
     if (groups.length === 0) {
         throw appErrors.create(
-            `Group with id ${groupId} not found`,
+            {en: `Group with id ${groupId} not found`, ar: `المجموعة بالمعرف ${groupId} غير موجودة`},
             404,
             httpStatusText.FAIL
         );
@@ -165,7 +165,7 @@ const deleteGroup = async (groupId) => {
     const [result] = await db.query("DELETE FROM Groupss WHERE id = ?", [groupId]);
 
     if (result.affectedRows === 0) {
-        throw appErrors.create(`Group with id ${groupId} is not found`, 404, httpStatusText.FAIL)
+        throw appErrors.create({en: `Group with id ${groupId} is not found`, ar: `المجموعة بالمعرف ${groupId} غير موجودة`}, 404, httpStatusText.FAIL)
     }
 }
 
@@ -174,36 +174,46 @@ const getGroupById = async (groupId) => {
     
     const [rows] = await db.query(`
         SELECT
-            g.id AS groupId,
-            g.name AS groupName,
-            g.maxStudents AS maxStudents,
-            g.isActive,
-            t.id AS teacherId,
-            u.name AS teacherName,
+    g.id AS groupId,
+    g.name AS groupName,
+    g.maxStudents,
+    g.isActive,
+    t.id AS teacherId,
+    u.name AS teacherName,
 
-            (
-                SELECT JSON_ARRAYAGG(
-                    JSON_OBJECT(
-                        'id', id,
-                        'day', gs.dayOfWeek,
-                        'startTime', TIME_FORMAT(gs.startTime, '%H:%i:%s'),
-                        'endTime', TIME_FORMAT(gs.endTime, '%H:%i:%s')
-                    )
-                )
-                FROM GroupSchedules gs
-                WHERE gs.groupId = g.id
-            ) AS schedules,
+    (
+        SELECT sm.surahName
+        FROM GroupSessions gs
+        INNER JOIN SessionMemorization sm
+            ON sm.sessionId = gs.id
+        WHERE gs.groupId = g.id
+        ORDER BY gs.sessionDate DESC, gs.id DESC
+        LIMIT 1
+    ) AS currentSurah,
 
-            (
-                SELECT JSON_ARRAYAGG(
-                    JSON_OBJECT(
-                        'id', s.id,
-                        'name', s.name
-                    )
-                )
-                FROM Students s
-                WHERE s.groupId = g.id 
-            ) AS students
+    (
+        SELECT JSON_ARRAYAGG(
+            JSON_OBJECT(
+                'id', id,
+                'day', gs.dayOfWeek,
+                'startTime', TIME_FORMAT(gs.startTime, '%H:%i:%s'),
+                'endTime', TIME_FORMAT(gs.endTime, '%H:%i:%s')
+            )
+        )
+        FROM GroupSchedules gs
+        WHERE gs.groupId = g.id
+    ) AS schedules,
+
+    (
+        SELECT JSON_ARRAYAGG(
+            JSON_OBJECT(
+                'id', s.id,
+                'name', s.name
+            )
+        )
+        FROM Students s
+        WHERE s.groupId = g.id
+    ) AS students
 
         FROM Groupss g
         LEFT JOIN Teachers t ON g.teacherId = t.id
@@ -214,7 +224,7 @@ const getGroupById = async (groupId) => {
         [groupId]
     );
     if (!rows.length)
-        throw appErrors.create(`Group with id ${groupId} is not found`, 404, httpStatusText.FAIL)
+        throw appErrors.create({en: `Group with id ${groupId} is not found`, ar: `المجموعة بالمعرف ${groupId} غير موجودة`}, 404, httpStatusText.FAIL)
     
     return rows[0];
 }
@@ -229,7 +239,7 @@ const toggleGroupActivation = async (groupId) => {
     );
 
     if (result.affectedRows === 0) {
-        throw appErrors.create(`Group with id ${groupId} is not found`, 404, httpStatusText.FAIL)
+        throw appErrors.create({en: `Group with id ${groupId} is not found`, ar: `المجموعة بالمعرف ${groupId} غير موجودة`}, 404, httpStatusText.FAIL)
     }
 
     return result;
@@ -251,7 +261,7 @@ const createGroupSession = async ({ groupId, memorization, revision }) => {
 
     if (groups.length === 0) {
         throw appErrors.create(
-            `Group with id ${groupId} not found`,
+            {en: `Group with id ${groupId} not found`, ar: `المجموعة بالمعرف ${groupId} غير موجودة`},
             404,
             httpStatusText.NOT_FOUND
         );
@@ -270,7 +280,7 @@ const createGroupSession = async ({ groupId, memorization, revision }) => {
 
     if (schedule.length === 0) {
         throw appErrors.create(
-            "This group does not have an active class at the current date Or time",
+            {en: `Group with id ${groupId} does not have a schedule at the current time`, ar: `المجموعة ذات المعرف ${groupId} ليس لديها جدول في الوقت الحالي`},
             400,
             httpStatusText.FAIL
         );
@@ -288,7 +298,7 @@ const createGroupSession = async ({ groupId, memorization, revision }) => {
 
     if (existingSession.length > 0) {
         throw appErrors.create(
-            "Today's session already exists",
+            {en: `Group with id ${groupId} already has a session today`, ar: `المجموعة ذات المعرف ${groupId} لديها جلسة بالفعل اليوم`},
             409,
             httpStatusText.FAIL
         );
@@ -368,7 +378,7 @@ const getLastGroupSession = async (groupId, userId) => {
 
     if (group.length === 0) {
         throw appErrors.create(
-            "This group is not assigned to this teacher",
+            {en: "This group is not assigned to this teacher", ar: "هذه المجموعة غير مخصصة لهذا المعلم"},
             403,
             httpStatusText.FAIL
         );

@@ -57,7 +57,7 @@ const addGroupSchedule = async (scheduleData) => {
     );
 
     if (result.affectedRows === 0)
-        throw appErrors.create(`Group with id ${groupId} is not found`, 404, httpStatusText.FAIL)
+        throw appErrors.create({en: `Group schedule with id ${scheduleId} is not found`, ar: `جدول المجموعة بالمعرف ${scheduleId} غير موجود`}, 404, httpStatusText.FAIL)
 
     return result;
 };

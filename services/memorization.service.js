@@ -5,7 +5,7 @@ import httpStatusText from "../utils/httpStatusText.js";
 
 // create memorization to specific student in specific group schedule
 const createMemorization = async (reqBody, userId, groupId, studentId) => {
-    console.log(reqBody)
+    
     let { memorizationScore, revision, notes, date } = reqBody;
 
     let [teacherId] = await db.query(`

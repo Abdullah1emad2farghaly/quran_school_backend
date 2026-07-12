@@ -213,7 +213,7 @@ const getMyGroupStudents = async (userId, groupId) => {
 
     if (group.length === 0) {
         throw appErrors.create(
-            "Group not found or does not belong to this teacher",
+            {en: 'Group not found or you are not authorized to access this group', ar: 'المجموعة غير موجودة أو ليس لديك صلاحية الوصول لهذه المجموعة'},
             404,
             httpStatusText.FAIL
         );
@@ -261,57 +261,120 @@ const getMyGroupStudents = async (userId, groupId) => {
 
     const [groupRows] = await db.query(
         `
-    SELECT
-        g.id,
-        g.name AS groupName,
-        g.maxStudents,
-        g.isActive,
-        g.createdAt,
-        COALESCE(
-            (
-                SELECT JSON_ARRAYAGG(
-                    JSON_OBJECT(
-                        'id', gs.id,
-                        'day', gs.dayOfWeek,
-                        'startTime', TIME_FORMAT(gs.startTime, '%H:%i:%s'),
-                        'endTime', TIME_FORMAT(gs.endTime, '%H:%i:%s')
+        SELECT
+            g.id,
+            g.name AS groupName,
+            g.maxStudents,
+            g.isActive,
+            g.createdAt,
+            COALESCE(
+                (
+                    SELECT JSON_ARRAYAGG(
+                        JSON_OBJECT(
+                            'id', gs.id,
+                            'day', gs.dayOfWeek,
+                            'startTime', TIME_FORMAT(gs.startTime, '%H:%i:%s'),
+                            'endTime', TIME_FORMAT(gs.endTime, '%H:%i:%s')
+                        )
                     )
-                )
-                FROM groupSchedules gs
-                WHERE gs.groupId = g.id
-            ),
-            JSON_ARRAY()
-        ) AS schedules
-    FROM Groupss g
-    WHERE g.id = ?
+                    FROM groupSchedules gs
+                    WHERE gs.groupId = g.id
+                ),
+                JSON_ARRAY()
+            ) AS schedules
+        FROM Groupss g
+        WHERE g.id = ?
     `,
         [groupId]
     );
 
+    const [[lastSession]] = await db.query(`
+        SELECT id
+        FROM GroupSessions
+        WHERE groupId = ?
+            AND sessionDate < CURDATE()
+        ORDER BY sessionDate DESC
+        LIMIT 1
+    `, [groupId]);
+
+    const lastSessionId = lastSession?.id || null;
+
     const [students] = await db.query(
-        `
-    SELECT
-        s.id,
-        s.name AS studentName,
-        s.birthDate AS birthDate,
-        s.groupId AS groupId,
-        u.phone AS parentPhone,
-        s.createdAt AS studentCreatedAt,
-        a.status AS attendanceStatus
-    FROM Students s
-    LEFT JOIN Parents p
-        ON s.parentId = p.id
-    LEFT JOIN Users u
-        ON p.userId = u.id
-    LEFT JOIN Attendance a
-        ON a.studentId = s.id
-        AND a.groupId = s.groupId
-        AND DATE(a.date) = CURDATE()
-    WHERE s.groupId = ?
-    ORDER BY s.name
-    `,
-        [groupId]
-    );
+`
+SELECT
+    s.id,
+    s.name AS studentName,
+    s.birthDate,
+    s.groupId,
+    u.phone AS parentPhone,
+    s.createdAt AS studentCreatedAt,
+
+    a.status AS attendanceStatus,
+
+    JSON_OBJECT(
+        'sessionId', ?,
+        'recordId', mr.id,
+        'memorizationScore', mr.memorizationScore,
+        'revisionScore', mr.revision,
+
+        'memorization',
+        CASE
+            WHEN sm.id IS NULL THEN NULL
+            ELSE JSON_OBJECT(
+                'id', sm.id,
+                'surahName', sm.surahName,
+                'fromAyah', sm.fromAyah,
+                'toAyah', sm.toAyah
+            )
+        END,
+
+        'revision',
+        CASE
+            WHEN sr.id IS NULL THEN NULL
+            ELSE JSON_OBJECT(
+                'id', sr.id,
+                'surahName', sr.surahName,
+                'fromAyah', sr.fromAyah,
+                'toAyah', sr.toAyah
+            )
+        END
+    ) AS lastSession
+
+FROM Students s
+
+LEFT JOIN Parents p
+    ON s.parentId = p.id
+
+LEFT JOIN Users u
+    ON p.userId = u.id
+
+LEFT JOIN Attendance a
+    ON a.studentId = s.id
+    AND a.groupId = s.groupId
+    AND DATE(a.date) = CURDATE()
+
+LEFT JOIN MemorizationRecords mr
+    ON mr.studentId = s.id
+    AND mr.sessionId = ?
+
+LEFT JOIN SessionMemorization sm
+    ON sm.sessionId = ?
+
+LEFT JOIN SessionRevision sr
+    ON sr.sessionId = ?
+
+WHERE s.groupId = ?
+
+ORDER BY s.name;
+`,
+[
+    lastSessionId, // sessionId in JSON
+    lastSessionId, // MemorizationRecords
+    lastSessionId, // SessionMemorization
+    lastSessionId, // SessionRevision
+    groupId
+]
+);
 
     const response = {
         sessionId: sessionId,

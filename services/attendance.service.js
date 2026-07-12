@@ -18,7 +18,7 @@ const createAttendance = async (reqBody) => {
     // Validate attendances array
     if (!attendances || !Array.isArray(attendances) || attendances.length === 0) {
         throw appErrors.create(
-            "Attendances array is required",
+            {en: "Attendances array is required", ar: "مصفوفة الحضور مطلوبة"},
             400,
             httpStatusText.FAIL
         );
@@ -36,7 +36,7 @@ const createAttendance = async (reqBody) => {
 
     if (groupRows.length === 0) {
         throw appErrors.create(
-            `Group with id ${groupId} does not exist`,
+            {en: `Group with id ${groupId} does not exist`, ar: `المجموعة بالمعرف ${groupId} غير موجودة`},
             404,
             httpStatusText.NOT_FOUND
         );
@@ -65,7 +65,7 @@ const createAttendance = async (reqBody) => {
 
     if (schedule.length === 0) {
         throw appErrors.create(
-            `Group with id ${groupId} does not have a schedule at the current time`,
+            {en: `Group with id ${groupId} does not have a schedule at the current time`, ar: `المجموعة ذات المعرف ${groupId} ليس لديها جدول في الوقت الحالي`},
             400,
             httpStatusText.FAIL
         );
@@ -85,7 +85,7 @@ const createAttendance = async (reqBody) => {
 
     if (existing.length > 0) {
         throw appErrors.create(
-            "Attendance for this group has already been recorded",
+            {en: "Attendance for this group has already been recorded", ar: "تم تسجيل الحضور لهذه المجموعة بالفعل"},
             400,
             httpStatusText.FAIL
         );
@@ -138,6 +138,8 @@ const createAttendance = async (reqBody) => {
         insertedRows: result.affectedRows
     };
 };
+
+
 const getAllAttendance = async () => {
     const [rows] = await db.query(`
         SELECT
@@ -155,7 +157,7 @@ const getAllAttendance = async () => {
 
 const getAttendanceByStudent = async (studentId) => {
     const [attendance] = await db.query(
-        `
+    `
         SELECT status, date
         FROM Attendance
         WHERE studentId = ?
@@ -176,14 +178,12 @@ const getAttendanceByStudent = async (studentId) => {
         [studentId]
     );
 
-    console.log(absenceStats[0])
-
 
     const rows = { ...absenceStats[0], attendance };
 
 
     if (rows.length === 0) {
-        throw appErrors.create(`No attendance records found for student with id ${studentId}`, 404, httpStatusText.NOT_FOUND);
+        throw appErrors.create({en: `No attendance records found for student with id ${studentId}`, ar: `لا توجد سجلات حضور للطالب بالمعرف ${studentId}`}, 404, httpStatusText.NOT_FOUND);
     }
 
     return rows;
@@ -197,7 +197,7 @@ const deleteAttendanceById = async (attendanceId) => {
     `, [attendanceId]);
 
     if (result.affectedRows === 0) {
-        throw appErrors.create(`Attendance with id ${attendanceId} does not exist`, 404, httpStatusText.NOT_FOUND);
+        throw appErrors.create({en: `Attendance with id ${attendanceId} does not exist`, ar: `الحضور بالمعرف ${attendanceId} غير موجود`}, 404, httpStatusText.NOT_FOUND);
     }
     return result;
 };
